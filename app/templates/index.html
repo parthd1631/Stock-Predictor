@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for interactive charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Theme toggle button -->
+    <div class="theme-toggle" id="theme-toggle">
+        <i class="fas fa-moon"></i>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-chart-line"></i> Stock Price Predictor</h1>
+            <p>Enter a stock symbol to see prediction for tomorrow's price movement</p>
+        </header>
+
+        <main>
+            <div class="search-container">
+                <input type="text" id="ticker-input" placeholder="Enter stock symbol (e.g., AAPL, MSFT, GOOGL)">
+                <select id="timeframe-select">
+                    <option value="1">1 Day</option>
+                    <option value="3">3 Days</option>
+                    <option value="7">7 Days</option>
+                    <option value="30" selected>30 Days</option>
+                </select>
+                <button id="predict-btn">Predict <i class="fas fa-arrow-right"></i></button>
+            </div>
+
+            <div id="loading" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyzing market data and training models...</p>
+                <p class="small-text">This may take a few moments</p>
+            </div>
+
+            <div id="error-container" class="hidden">
+                <div class="error-message">
+                    <h3><i class="fas fa-exclamation-circle"></i> Error</h3>
+                    <p id="error-text"></p>
+                </div>
+            </div>
+
+            <div id="result-container" class="hidden">
+                <div class="stock-info">
+                    <h2 id="stock-ticker"></h2>
+                    <p id="current-price"></p>
+                    <p id="last-updated" class="small-text"></p>
+                </div>
+
+                <!-- Historical Chart Section -->
+                <div class="chart-container">
+                    <h3><i class="fas fa-chart-area"></i> Historical Price Movement</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="historical-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="prediction-result">
+                    <div class="prediction-card">
+                        <h3><i class="fas fa-chart-bar"></i> Tomorrow's Prediction</h3>
+                        <div id="prediction" class="prediction-value"></div>
+                        <div id="confidence" class="confidence"></div>
+                        <p id="probability"></p>
+                    </div>
+                </div>
+
+                <!-- Technical Indicators Section -->
+                <div id="technical-indicators" class="technical-indicators hidden">
+                    <h3><i class="fas fa-chart-line"></i> Technical Indicators</h3>
+                    <div class="indicators-grid">
+                        <div class="indicator-card">
+                            <h4>RSI</h4>
+                            <div id="rsi-value" class="indicator-value">--</div>
+                            <div id="rsi-signal" class="indicator-signal"></div>
+                        </div>
+                        <div class="indicator-card">
+                            <h4>MACD</h4>
+                            <div id="macd-value" class="indicator-value">--</div>
+                            <div id="macd-signal" class="indicator-signal"></div>
+                        </div>
+                        <div class="indicator-card">
+                            <h4>Moving Avg</h4>
+                            <div id="ma-value" class="indicator-value">--</div>
+                            <div id="ma-signal" class="indicator-signal"></div>
+                        </div>
+                        <div class="indicator-card">
+                            <h4>Volume</h4>
+                            <div id="volume-value" class="indicator-value">--</div>
+                            <div id="volume-signal" class="indicator-signal"></div>
+                        </div>
+                        <div class="indicator-card">
+                            <h4>Bollinger Bands</h4>
+                            <div id="bb-value" class="indicator-value">--/--</div>
+                            <div id="bb-signal" class="indicator-signal"></div>
+                        </div>
+                        <div class="indicator-card">
+                            <h4>Money Flow Index</h4>
+                            <div id="mfi-value" class="indicator-value">--</div>
+                            <div id="mfi-signal" class="indicator-signal"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Metrics Section -->
+                <div id="risk-metrics" class="risk-metrics hidden">
+                    <h3>Risk Assessment</h3>
+                    <div class="risk-grid">
+                        <div class="risk-card">
+                            <h4>Volatility</h4>
+                            <div id="risk-volatility" class="risk-value"></div>
+                        </div>
+                        <div class="risk-card">
+                            <h4>Sharpe Ratio</h4>
+                            <div id="risk-sharpe" class="risk-value"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- News Sentiment Analysis Section -->
+                <div id="news-sentiment" class="news-sentiment hidden">
+                    <h3><i class="fas fa-newspaper"></i> News Sentiment Analysis</h3>
+                    <div class="sentiment-overview">
+                        <div class="sentiment-meter">
+                            <div id="sentiment-indicator" class="sentiment-indicator"></div>
+                        </div>
+                        <div class="sentiment-scale">
+                            <span>Negative</span>
+                            <span>Neutral</span>
+                            <span>Positive</span>
+                        </div>
+                        <div class="sentiment-summary">
+                            Overall Sentiment: <span id="sentiment-label" class="sentiment-value"></span>
+                        </div>
+                    </div>
+                    <div id="news-container" class="news-container">
+                        <!-- News items will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <p><i class="fas fa-info-circle"></i> <strong>Disclaimer:</strong> This prediction is based on historical data and machine learning algorithms. It should not be used as financial advice. Always do your own research before making investment decisions.</p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Stock Price Predictor | <i class="fas fa-code"></i> with <i class="fas fa-heart"></i></p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html> 
